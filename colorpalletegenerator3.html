@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aesthetic Color Palette Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .color-block {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .color-block:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .copy-notification {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .copy-notification.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <header class="bg-white shadow-sm py-6">
+        <div class="container mx-auto px-4">
+            <h1 class="text-3xl font-bold text-center text-gray-800">Aesthetic Palette Generator</h1>
+            <p class="text-center text-gray-600 mt-2">Create beautiful color schemes with one click</p>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div class="flex justify-center mb-8">
+            <button id="generateBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-lg shadow-md transition-colors">
+                Generate Palette
+            </button>
+        </div>
+
+        <div id="paletteContainer" class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+            <!-- Palette colors will be injected here -->
+            <div class="text-center">
+                <div class="color-block h-40 rounded-lg mb-2 flex items-center justify-center">
+                    <span class="text-white font-bold shadow-md">Click Generate</span>
+                </div>
+                <div class="text-sm font-mono">#FFFFFF</div>
+            </div>
+        </div>
+
+        <div id="controls" class="bg-white p-6 rounded-lg shadow-sm">
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Theme</label>
+                <select id="themeSelect" class="w-full p-2 border rounded">
+                    <option value="pastel">Pastel</option>
+                    <option value="vibrant">Vibrant</option>
+                    <option value="earth">Earth Tones</option>
+                    <option value="mono">Monochromatic</option>
+                </select>
+            </div>
+            <div class="flex justify-between items-center">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Colors</label>
+                    <input type="range" id="colorCount" min="3" max="8" value="5" class="w-full">
+                </div>
+                <div id="copyNotification" class="copy-notification bg-green-100 text-green-800 px-4 py-2 rounded">
+                    Copied to clipboard!
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white py-4 shadow-inner">
+        <div class="container mx-auto px-4 text-center text-gray-600">
+            Made with ❤️ for designers & developers
+        </div>
+    </footer>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const paletteContainer = document.getElementById('paletteContainer');
+        const themeSelect = document.getElementById('themeSelect');
+        const colorCount = document.getElementById('colorCount');
+        const copyNotification = document.getElementById('copyNotification');
+
+        function generateRandomColor(theme) {
+            let h, s, l;
+            
+            switch(theme) {
+                case 'pastel':
+                    h = Math.floor(Math.random() * 360);
+                    s = Math.floor(Math.random() * 30) + 70;
+                    l = Math.floor(Math.random() * 25) + 75;
+                    break;
+                case 'vibrant':
+                    h = Math.floor(Math.random() * 360);
+                    s = Math.floor(Math.random() * 50) + 50;
+                    l = Math.floor(Math.random() * 30) + 50;
+                    break;
+                case 'earth':
+                    h = Math.floor(Math.random() * 60) + 15;
+                    s = Math.floor(Math.random() * 50) + 30;
+                    l = Math.floor(Math.random() * 50) + 25;
+                    break;
+                case 'mono':
+                    h = Math.floor(Math.random() * 60);
+                    s = Math.floor(Math.random() * 30) + 10;
+                    l = Math.floor(Math.random() * 70) + 15;
+                    break;
+                default:
+                    h = Math.floor(Math.random() * 360);
+                    s = Math.floor(Math.random() * 100);
+                    l = Math.floor(Math.random() * 100);
+            }
+            
+            return `hsl(${h}, ${s}%, ${l}%)`;
+        }
+
+        function hslToHex(h, s, l) {
+            l /= 100;
+            const a = s * Math.min(l, 1 - l) / 100;
+            const f = n => {
+                const k = (n + h / 30) % 12;
+                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                return Math.round(255 * color).toString(16).padStart(2, '0');
+            };
+            return `#${f(0)}${f(8)}${f(4)}`;
+        }
+
+        function generatePalette() {
+            const theme = themeSelect.value;
+            const count = parseInt(colorCount.value);
+            
+            paletteContainer.innerHTML = '';
+            
+            for (let i = 0; i < count; i++) {
+                const color = generateRandomColor(theme);
+                const colorBlock = document.createElement('div');
+                colorBlock.className = 'color-block h-40 rounded-lg mb-2';
+                colorBlock.style.backgroundColor = color;
+                
+                const hslValues = color.match(/\d+/g);
+                const hexColor = hslToHex(hslValues[0], hslValues[1], hslValues[2]);
+                
+                const paletteItem = document.createElement('div');
+                paletteItem.className = 'text-center';
+                paletteItem.innerHTML = `
+                    ${colorBlock.outerHTML}
+                    <div class="text-sm font-mono">${hexColor}</div>
+                `;
+                
+                paletteContainer.appendChild(paletteItem);
+                
+                colorBlock.addEventListener('click', () => {
+                    navigator.clipboard.writeText(hexColor);
+                    copyNotification.classList.add('show');
+                    setTimeout(() => {
+                        copyNotification.classList.remove('show');
+                    }, 2000);
+                });
+            }
+        }
+
+        generateBtn.addEventListener('click', generatePalette);
+        themeSelect.addEventListener('change', generatePalette);
+        colorCount.addEventListener('input', generatePalette);
+
+        // Initial generation
+        generatePalette();
+    </script>
+</body>
+</html>
